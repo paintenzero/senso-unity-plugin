@@ -28,38 +28,12 @@ namespace Senso
         private IPAddress m_ip;
         private Int32 m_port;
 
-        //private Thread m_thread = null; //!< Thread where socket networking happend
-        //private volatile bool m_isRunning; //!< flag if thread should continue running
         private int RECV_BUFFER_SIZE = 4096; //!< Size of the buffer for read operations
         private int SEND_BUFFER_SIZE = 4096; //!< Size of the buffer to send
         private Byte[] inBuffer;
         private int inBufferOffset = 0;
         private Byte[] outBuffer;
         private int outBufferOffset = 0;
-
-        /*private struct OrientationPacket
-        {
-            public bool changed { get; private set; }
-            private Quaternion rotation;
-            private Vector3 position;
-            public void Change (Vector3 newPosition, Quaternion newRotation) {
-                position = newPosition;
-                rotation = newRotation;
-                changed = true;
-            }
-            public int GetJSON(ref Byte[] buf, ref int bufOffset) {
-                var str = String.Format("{{\"type\":\"orientation\",\"data\":{{\"type\":\"hmd\",\"px\":{0},\"py\":{1},\"pz\":{2}, \"qx\":{3},\"qy\":{4},\"qz\":{5},\"qw\":{6}}}}}\n", position.x, position.z, position.y, rotation.w, rotation.x, rotation.z, rotation.y);
-                changed = false;
-                Debug.Log(str);
-                return Encoding.ASCII.GetBytes(str, 0, str.Length, buf, bufOffset);
-            }
-        };
-
-      private VibroPacket[] vibroPackets; //!< Vibration packets to send to server
-      private System.Object vibroLock = new System.Object(); //!< Lock to use when working with vibroPackets
-
-      private OrientationPacket orientationPacket;
-      private System.Object orientationLock = new System.Object();*/
 
         ///
         /// @brief Default constructor
@@ -70,22 +44,12 @@ namespace Senso
             State = NetworkState.SENSO_DISCONNECTED;
             inBuffer = new Byte[RECV_BUFFER_SIZE];
             outBuffer = new Byte[SEND_BUFFER_SIZE];
-            //handSamples = new SensoHandData[(int)ESensoPositionType.PositionsCount];
-            //for (int i = 0; i < (int)ESensoPositionType.PositionsCount; ++i) handSamples[i] = new SensoHandData();
 
             if (!IPAddress.TryParse(host, out m_ip))
             {
                 State = NetworkState.SENSO_ERROR;
                 Debug.LogError("SensoManager: can't parse senso driver host");
             }
-
-            /*vibroPackets = new VibroPacket[10]; // 5 for each hand. 1-5 = right hand, 6-10 = left hand
-            for (int i = 0; i < vibroPackets.Length; ++i)
-            {
-                vibroPackets[i] = new VibroPacket();
-            }
-            gestures = new LinkedList<SensoHandGesture>();
-            GesturesCount = 0;*/
         }
 
         ~NetworkThread()
@@ -274,7 +238,7 @@ namespace Senso
         /// @brief Sends HMD orientation to Senso Server
         ///
         public void SetHeadLocationAndRotation(Vector3 position, Quaternion rotation) {
-            var str = String.Format("{{\"type\":\"orientation\",\"data\":{{\"type\":\"hmd\",\"px\":{0},\"py\":{1},\"pz\":{2}, \"qx\":{3},\"qy\":{4},\"qz\":{5},\"qw\":{6}}}}}\n", position.x, position.z, position.y, rotation.w, rotation.x, rotation.z, rotation.y);
+            var str = String.Format("{{\"type\":\"orientation\",\"data\":{{\"type\":\"hmd\",\"px\":{0},\"py\":{1},\"pz\":{2}, \"qx\":{3},\"qy\":{4},\"qz\":{5},\"qw\":{6}}}}}\n", position.x, position.z, position.y, rotation.x, rotation.z, rotation.y, rotation.w);
             outBufferOffset += Encoding.ASCII.GetBytes(str, 0, str.Length, outBuffer, outBufferOffset);
         }
 

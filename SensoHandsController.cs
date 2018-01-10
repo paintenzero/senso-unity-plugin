@@ -13,7 +13,7 @@ public class SensoHandsController : MonoBehaviour {
     // Where to connect to
     public string SensoHost = "127.0.0.1"; //!< IP address of the Senso Server instane
     public int SensoPort = 53450; //!< Port of the Senso Server instance
-    private Senso.NetworkThread sensoThread;
+    private Senso.UDPThread sensoThread;
 
     public bool StartOnLaunch = true;
 
@@ -37,9 +37,14 @@ public class SensoHandsController : MonoBehaviour {
 
         if (StartOnLaunch) StartTracking();
     }
-	
-	// Every frame
-	void Update ()
+
+    private void OnDestroy()
+    {
+        StopTracking();
+    }
+
+    // Every frame
+    void Update ()
     {
 		if (sensoThread != null)
         {
@@ -96,7 +101,7 @@ public class SensoHandsController : MonoBehaviour {
 
     public void StartTracking() {
         if (sensoThread == null) {
-            sensoThread = new Senso.NetworkThread(SensoHost, SensoPort);
+            sensoThread = new Senso.UDPThread(SensoHost, SensoPort, 53459);
             sensoThread.StartThread();
         }
     }
