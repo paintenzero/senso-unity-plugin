@@ -183,8 +183,7 @@ namespace Senso
         ///
         public override void VibrateFinger (EPositionType handType, EFingerType fingerType, ushort duration, byte strength)
         {
-            var str = GetVibrateFingerJSON(handType, fingerType, duration, strength);
-            outBufferOffset += Encoding.ASCII.GetBytes(str, 0, str.Length, outBuffer, outBufferOffset);
+            sendToServer(GetVibrateFingerJSON(handType, fingerType, duration, strength));
         }
 
         ///
@@ -192,9 +191,21 @@ namespace Senso
         ///
         public override void SetHeadLocationAndRotation(Vector3 position, Quaternion rotation) 
         {
-            var str = GetHeadLocationAndRotationJSON(position, rotation);
-            outBufferOffset += Encoding.ASCII.GetBytes(str, 0, str.Length, outBuffer, outBufferOffset);
+            sendToServer(GetHeadLocationAndRotationJSON(position, rotation));
         }
 
+        ///
+        /// @brief Sends ping to Senso Server
+        ///
+        public override void SendPing()
+        {
+            sendToServer(GetPingJSON());
+        }
+
+        private void sendToServer(String str)
+        {
+            if (str.Length > outBuffer.Length - outBufferOffset) return;
+            outBufferOffset += Encoding.ASCII.GetBytes(str, 0, str.Length, outBuffer, outBufferOffset);
+        }
     }
 }

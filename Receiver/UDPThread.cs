@@ -13,7 +13,6 @@ namespace Senso
         private Thread netThread;
 
         private UdpClient m_sock;
-        private Int32 m_localPort;
         private IPEndPoint ep;
 
         private Stack<NetData> pendingPackets;
@@ -26,11 +25,10 @@ namespace Senso
         ///
         /// @brief Default constructor
         ///
-        public UDPThread(string host, Int32 port, Int32 localPort) : base(host, port)
+        public UDPThread(string host, Int32 port) : base(host, port)
         {
             outBuffer = new Byte[SEND_BUFFER_SIZE];
-
-            m_localPort = localPort;
+            
             if (State != NetworkState.SENSO_ERROR)
             {
                 ep = new IPEndPoint(m_ip, m_port);
@@ -72,7 +70,7 @@ namespace Senso
         private void Run()
         { 
             Byte[] inBuffer;
-            m_sock = new UdpClient(m_localPort);
+            m_sock = new UdpClient();
 
             while (m_isStarted && State != NetworkState.SENSO_ERROR)
             {
@@ -141,10 +139,7 @@ namespace Senso
         {
             if (m_sock != null)
             {
-                var str = GetVibrateFingerJSON(handType, fingerType, duration, strength);
-                outBufferOffset += Encoding.ASCII.GetBytes(str, 0, str.Length, outBuffer, outBufferOffset);
-                m_sock.Send(outBuffer, outBufferOffset, ep);
-                outBufferOffset = 0;
+                sendToServer(GetVibrateFingerJSON(handType, fingerType, duration, strength));
             }
         }
 
@@ -155,11 +150,26 @@ namespace Senso
         {
             if (m_sock != null)
             {
-                var str = GetHeadLocationAndRotationJSON(position, rotation);
-                outBufferOffset += Encoding.ASCII.GetBytes(str, 0, str.Length, outBuffer, outBufferOffset);
-                m_sock.Send(outBuffer, outBufferOffset, ep);
-                outBufferOffset = 0;
+                sendToServer(GetHeadLocationAndRotationJSON(position, rotation));
             }
+        }
+
+        ///
+        /// @brief Sends ping to Senso Server
+        ///
+        public override void SendPing()
+        {
+            if (m_sock != null)
+            {
+                sendToServer(GetPingJSON());
+            }
+        }
+
+        private void sendToServer(String str)
+        {
+            outBufferOffset += Encoding.ASCII.GetBytes(str, 0, str.Length, outBuffer, outBufferOffset);
+            m_sock.Send(outBuffer, outBufferOffset, ep);
+            outBufferOffset = 0;
         }
     }
 }

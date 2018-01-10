@@ -50,6 +50,7 @@ namespace Senso
         abstract public Stack<NetData> UpdateData();
         abstract public void SetHeadLocationAndRotation(Vector3 position, Quaternion rotation);
         abstract public void VibrateFinger(EPositionType handType, EFingerType fingerType, ushort duration, byte strength);
+        abstract public void SendPing();
 
         ///
         /// @brief Parses JSON packet received from server
@@ -89,5 +90,9 @@ namespace Senso
             return String.Format("{{\"type\":\"orientation\",\"data\":{{\"type\":\"hmd\",\"px\":{0},\"py\":{1},\"pz\":{2}, \"qx\":{3},\"qy\":{4},\"qz\":{5},\"qw\":{6}}}}}\n", position.x, position.z, position.y, rotation.x, rotation.z, rotation.y, rotation.w);
         }
 
+        public String GetPingJSON()
+        {
+            return "{\"type\":\"ping\"}";
+        }
     }
 }
