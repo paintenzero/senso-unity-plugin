@@ -14,7 +14,7 @@ public class SensoBaseController : MonoBehaviour
     protected Senso.NetworkThread sensoThread;
 
     public bool StartOnLaunch = true;
-    public bool UseUDP = false;
+    public bool UseUDP = true;
 
     // Use this for initialization
     public void Start () {
