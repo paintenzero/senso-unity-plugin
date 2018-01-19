@@ -10,15 +10,28 @@ public class SensoHandExample : Senso.Hand {
 	public Transform[] thirdBones;
 	public Transform[] littleBones;
 
-    private Quaternion[] thumbInitialRotations;
+    private Quaternion[][] fingerInitialRotations;
 
     public new void Start ()
 	{
 		base.Start();
-        thumbInitialRotations = new Quaternion[thumbBones.Length];
-        for (int i = 0; i < thumbInitialRotations.Length; ++i)
-            thumbInitialRotations[i] = thumbBones[i].localRotation;
-	}
+        fingerInitialRotations = new Quaternion[5][];
+        for (int i = 0; i < 5; i++)
+        {
+            Transform[] arr;
+            switch (i)
+            {
+                case 1: arr = indexBones; break;
+                case 2: arr = middleBones; break;
+                case 3: arr = thirdBones; break;
+                case 4: arr = littleBones; break;
+                default: arr = thumbBones; break;
+            }
+            fingerInitialRotations[i] = new Quaternion[arr.Length];
+            for (int j = 0; j < arr.Length; ++j)
+                fingerInitialRotations[i][j] = arr[j].localRotation;
+        }
+    }
 
 
     public override void SetSensoPose (Senso.HandData aData)
@@ -29,10 +42,11 @@ public class SensoHandExample : Senso.Hand {
 		//Fingers
         if (aData.AdvancedThumb)
         {
-            Quaternion thumbQ = new Quaternion(aData.ThumbQuaternion.y / 3.0f, aData.ThumbQuaternion.x, -aData.ThumbQuaternion.z, aData.ThumbQuaternion.w);
-            thumbBones[0].localRotation = thumbInitialRotations[0] * thumbQ;
-            thumbBones[1].localRotation = thumbInitialRotations[1] * Quaternion.Euler(aData.ThumbQuaternion.y / 3.0f, 0.0f, 0.0f);
-            thumbBones[2].localRotation = thumbInitialRotations[2] * Quaternion.Euler(0.0f, 0.0f, -aData.ThumbBend * 1.5f * Mathf.Rad2Deg);
+            //Quaternion thumbQ = new Quaternion(aData.ThumbQuaternion.y / 3.0f, aData.ThumbQuaternion.x, -aData.ThumbQuaternion.z, aData.ThumbQuaternion.w);
+            Quaternion thumbQ = new Quaternion(aData.ThumbQuaternion.z, aData.ThumbQuaternion.y, -aData.ThumbQuaternion.x / 3.0f, aData.ThumbQuaternion.w);
+            thumbBones[0].localRotation = fingerInitialRotations[0][0] * thumbQ;
+            thumbBones[1].localRotation = fingerInitialRotations[0][1] * Quaternion.Euler(0.0f, 0.0f, -aData.ThumbQuaternion.x / 3.0f);
+            thumbBones[2].localRotation = fingerInitialRotations[0][2] * Quaternion.Euler(0.0f, 0.0f, aData.ThumbBend * Mathf.Rad2Deg);
         }
         else // old method
 		      setFingerBones(ref thumbBones, aData.ThumbAngles, Senso.EFingerType.Thumb);
@@ -42,18 +56,26 @@ public class SensoHandExample : Senso.Hand {
 		setFingerBones(ref littleBones, aData.LittleAngles, Senso.EFingerType.Little);
 	}
 
-	private static void setFingerBones(ref Transform[] bones, Vector2 angles, Senso.EFingerType fingerType)
+	private void setFingerBones(ref Transform[] bones, Vector2 angles, Senso.EFingerType fingerType)
 	{
 		if (fingerType == Senso.EFingerType.Thumb) setThumbBones(ref bones, ref angles);
 		else {
-            var vec = new Vector3(0, angles.x, -angles.y);
-			if (vec.z > 0.0f) {
-				bones[0].localEulerAngles = vec;
+            var fingerIdx = (int)fingerType;
+            var vec = new Vector3(-angles.y, 0, angles.x);
+            if (vec.x > 0.0f) {
+                vec.z += fingerInitialRotations[fingerIdx][0].eulerAngles.z;
+                bones[0].localEulerAngles = vec;
 			} else {
-                vec.z /= 2.0f;
-				for (int j = 0; j < bones.Length; ++j) {
-					bones[j].localEulerAngles = vec;
-					if (j == 0) vec.y = 0.0f;
+                var v = vec;
+                v.x /= 3.0f;
+                bones[0].localRotation = fingerInitialRotations[fingerIdx][0];
+                bones[0].Rotate(v);
+                vec.z = 0.0f;
+
+                vec.x /= 1.5f;
+				for (int j = 1; j < bones.Length; ++j) {
+                    bones[j].localRotation = fingerInitialRotations[fingerIdx][j];
+                    bones[j].Rotate(vec);
 				}
 			}
 		}
