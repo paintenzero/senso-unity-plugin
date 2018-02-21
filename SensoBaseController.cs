@@ -7,6 +7,7 @@ public class SensoBaseController : MonoBehaviour
     public Transform HeadPositionSource;
     private System.DateTime orientationNextSend;
     public double orientationSendEveryMS = 100.0f;
+    public Vector3 subtractFromOrientation;
 
     // Where to connect to
     public string SensoHost = "127.0.0.1"; //!< IP address of the Senso Server instane
@@ -31,7 +32,7 @@ public class SensoBaseController : MonoBehaviour
             {
                 if (HeadPositionSource != null)
                 {
-                    sensoThread.SetHeadLocationAndRotation(HeadPositionSource.transform.localPosition, HeadPositionSource.transform.localRotation);
+                    sensoThread.SetHeadLocationAndRotation(HeadPositionSource.transform.localPosition, HeadPositionSource.transform.rotation * Quaternion.Inverse(Quaternion.Euler(subtractFromOrientation)));
                 }
                 else
                 {
