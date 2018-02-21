@@ -5,7 +5,7 @@ namespace Senso
     public abstract class Hand : MonoBehaviour
     {
         public EPositionType HandType;
-        private System.WeakReference m_sensoHandsController;
+        protected System.WeakReference m_controller;
         public int BatteryLevel { get; private set; }
         public int Temperature { get; private set; }
         public string MacAddress { get; private set; }
@@ -30,21 +30,22 @@ namespace Senso
             MacAddress = newAddress;
         }
 
-        public void SetHandsController(SensoHandsController aController)
+        public void SetController(SensoHandsController aController)
         {
-            m_sensoHandsController = new System.WeakReference(aController);
+            m_controller = new System.WeakReference(aController);
         }
 
         public void VibrateFinger(Senso.EFingerType finger, ushort duration, byte strength)
         {
-            if (m_sensoHandsController.IsAlive)
+            if (m_controller.IsAlive)
             {
-                SensoHandsController man = m_sensoHandsController.Target as SensoHandsController;
-                man.SendVibro(HandType, finger, duration, strength);
+                SensoHandsController man = m_controller.Target as SensoHandsController;
+                if (man != null)
+                    man.SendVibro(HandType, finger, duration, strength);
             }
         }
 
-        public virtual void SetSensoPose(HandData newData) 
+        public virtual void SetSensoPose (HandData newData) 
 		{
 			Pose = newData;
 		}

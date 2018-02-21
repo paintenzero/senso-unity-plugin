@@ -41,6 +41,7 @@ public class SensoBodyExample : Senso.Body
     // Update is called once per frame
     public override void SetSensoPose (Senso.BodyData bodySample)
     {
+        base.SetSensoPose(bodySample);
         if (Pelvis != null)
         {
             Pelvis.ApplyQuaternion(bodySample.PelvisRotation);

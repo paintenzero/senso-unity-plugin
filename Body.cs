@@ -6,7 +6,8 @@ namespace Senso
 {
     public abstract class Body : MonoBehaviour
     {
-        private System.WeakReference m_bodyController;
+        protected System.WeakReference m_controller;
+        public BodyData Pose { get; private set; }
 
         // Use this for initialization
         public void Start()
@@ -14,12 +15,15 @@ namespace Senso
 
         }
         
-        public void SetBodyController(SensoBodyController aController)
+        public void SetController(SensoBaseController aController)
         {
-            m_bodyController = new System.WeakReference(aController);
+            m_controller = new System.WeakReference(aController);
         }
 
-        abstract public void SetSensoPose(BodyData newData);
+        public virtual void SetSensoPose(BodyData newData)
+        {
+            Pose = newData;
+        }
     }
 }
 

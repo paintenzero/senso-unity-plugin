@@ -13,7 +13,7 @@ public class SensoBodyController : SensoBaseController {
             Debug.LogError("Avatar is not set! What am I supposed to control?");
             return;
         }
-        Avatar.SetBodyController(this);
+        Avatar.SetController(this);
 
         base.Start();
     }

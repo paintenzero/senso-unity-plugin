@@ -2,11 +2,14 @@
 
 public class SensoHandsController : SensoBaseController
 {
-
     // Variables for hands objects
     public Senso.Hand[] Hands;
     private int m_rightHandInd = -1;
     private int m_leftHandInd = -1;
+
+    [Header("Senso Tracking")]
+    [Tooltip("Use this if you want to set camera position and orientation")]
+    public Senso.Body HeadTracking;
 
     // Initialization
     void Start () {
@@ -16,15 +19,16 @@ public class SensoHandsController : SensoBaseController
                 if (m_rightHandInd == -1 && Hands[i].HandType == Senso.EPositionType.RightHand)
                 {
                     m_rightHandInd = i;
-                    Hands[i].SetHandsController(this);
+                    Hands[i].SetController(this);
                 }
                 else if (m_leftHandInd == -1 && Hands[i].HandType == Senso.EPositionType.LeftHand)
                 {
                     m_leftHandInd = i;
-                    Hands[i].SetHandsController(this);
+                    Hands[i].SetController(this);
                 }
             }
         }
+        if (HeadTracking != null) HeadTracking.SetController(this);
         base.Start();
     }
 
@@ -58,6 +62,11 @@ public class SensoHandsController : SensoBaseController
                                 leftUpdated = true;
                             }
                         }
+                    } else if (parsedData.type.Equals("campos"))
+                    {
+                        var bodyData = JsonUtility.FromJson<Senso.BodyDataFull>(parsedData.packet);
+                        if (HeadTracking != null)
+                            HeadTracking.SetSensoPose(bodyData.data);
                     }
                 }
             }
