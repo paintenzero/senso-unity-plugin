@@ -36,7 +36,8 @@ public class SensoHandExample : Senso.Hand {
 
     public override void SetSensoPose (Senso.HandData aData)
 	{
-        Palm.localRotation = /*(Quaternion.Inverse(wq) */ aData.PalmRotation;
+		base.SetSensoPose(aData);
+        Palm.localRotation = aData.PalmRotation;
         Palm.localPosition = aData.PalmPosition;
 
 		//Fingers

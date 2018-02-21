@@ -24,6 +24,7 @@ namespace Senso
 
         public Vector3 PelvisPosition { get { return arrToVec3(position); } }
         public Vector3 CameraPosition { get { return arrToVec3(campos); } }
+        public float CameraAzimuth { get { return campos[3]; } }
 
         public Quaternion PelvisRotation { get { return arrToQuat(pelvis.quat); } }
         public Quaternion SpineRotation { get { return arrToQuat(spine.quat); } }

@@ -20,7 +20,9 @@ namespace Senso
 		    "type": "rh",
 		    "palm": {
 			    "pos": [0.000000, 0.000000, 0.000000],
-			    "quat": [0.99907601, -0.00936431, -0.00414328, -0.04174160]
+			    "quat": [0.99907601, -0.00936431, -0.00414328, -0.04174160],
+				"spd": [0,0,0],
+				"acc": [0,0,0]
 		    },
 		    "wrist": {
 			    "quat": [0.94954628, 0.11741631, 0.16499953, -0.23947972]
@@ -78,6 +80,8 @@ namespace Senso
         }
         public Vector3 PalmPosition { get { return arrToVec3(palm.pos); } }
         public Quaternion PalmRotation { get { return arrToQuat(palm.quat); } }
+		public Vector3 PalmSpeed { get { return arrToVec3(palm.spd); } }
+		public Vector3 PalmAccelerometer { get { return arrToVec3(palm.acc); } }
         public Quaternion WristRotation { get { return arrToQuat(wrist.quat); } }
         public bool WristPresent { get { return wrist.quat != null; } }
         public Quaternion ShoulderRotation { get { return arrToQuat(shoulder.quat); } }

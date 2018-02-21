@@ -15,6 +15,8 @@ namespace Senso
     {
         public float[] pos;
         public float[] quat;
+		public float[] acc;
+		public float[] spd;
     }
     [Serializable]
     public class Quat

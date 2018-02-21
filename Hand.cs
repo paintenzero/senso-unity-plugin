@@ -9,6 +9,7 @@ namespace Senso
         public int BatteryLevel { get; private set; }
         public int Temperature { get; private set; }
         public string MacAddress { get; private set; }
+		public HandData Pose { get; private set; }
 
         public void Start()
         {
@@ -43,6 +44,9 @@ namespace Senso
             }
         }
 
-        abstract public void SetSensoPose(HandData newData);
+        public virtual void SetSensoPose(HandData newData) 
+		{
+			Pose = newData;
+		}
     }
 }
