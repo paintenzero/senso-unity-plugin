@@ -101,7 +101,7 @@ namespace Senso
             }
         }
 
-        public override Stack<NetData> UpdateData()
+        public override int UpdateData(ref NetData[] res)
         {
             if (State == NetworkState.SENSO_DISCONNECTED && m_isStarted)
             {
@@ -109,14 +109,14 @@ namespace Senso
             }
             else if (State == NetworkState.SENSO_CONNECTED)
             {
-                return ReadNetwork();
+                return ReadNetwork(ref res);
             }
-            return null;
+            return 0;
         }
 
-        private Stack<NetData> ReadNetwork()
+        private int ReadNetwork(ref NetData[] res)
         {
-            var result = new Stack<NetData>();
+            int resInd = 0;
             if (!m_sock.Connected) disconnect();
             if (m_stream.DataAvailable)
             {
@@ -132,7 +132,7 @@ namespace Senso
                     {
                         Debug.LogError("Write error: " + ex.Message);
                         disconnect();
-                        return result;
+                        return 0;
                     }
                     outBufferOffset = 0;
                 }
@@ -158,7 +158,20 @@ namespace Senso
                         if (inBuffer[i] == '\n')
                         {
                             var packet = processJsonStr(Encoding.ASCII.GetString(inBuffer, packetStart, i - packetStart));
-                            if (packet != null) result.Push(packet);
+                            if (packet != null)
+                            {
+                                if (res.Length == resInd)
+                                {
+                                    for (int j = 1; j < res.Length - 1; ++j)
+                                    {
+                                        res[j - 1] = res[j];
+                                    }
+                                    res[resInd] = packet;
+                                } else
+                                {
+                                    res[resInd++] = packet;
+                                }
+                            }
                             packetStart = i + 1;
                         }
                     if (readSz > packetStart)
@@ -175,7 +188,7 @@ namespace Senso
                     disconnect();
                 }
             }
-            return result;
+            return resInd;
         }
 
         ///

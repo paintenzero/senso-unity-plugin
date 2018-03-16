@@ -8,6 +8,8 @@ public class SensoHandsController : SensoBaseController
     private int m_rightHandInd = -1;
     private int m_leftHandInd = -1;
 
+    public TextMesh statsMesh;
+
     // Initialization
     void Start () {
         if (Hands != null && Hands.Length > 0) {
@@ -31,17 +33,21 @@ public class SensoHandsController : SensoBaseController
     // Every frame
     void Update ()
     {
+        var t = Time.realtimeSinceStartup;
         base.Update();
-		if (sensoThread != null)
+        var sendDt = Time.realtimeSinceStartup - t;
+        if (sensoThread != null)
         {
-            var datas = sensoThread.UpdateData();
-            if (datas != null)
+            var t2 = Time.realtimeSinceStartup;
+            int cnt = sensoThread.UpdateData(ref receivedData);
+            var updateDt = Time.realtimeSinceStartup - t2;
+            if (cnt > 0)
             {
                 bool rightUpdated = false;
                 bool leftUpdated = false;
-                while (datas.Count > 0)
+                for (int i = cnt - 1; i >= 0; --i)
                 {
-                    var parsedData = datas.Pop();
+                    var parsedData = receivedData[i];
                     if (parsedData.type.Equals("position"))
                     {
                         if ((m_rightHandInd != -1 && !rightUpdated) || (m_leftHandInd != -1 && !leftUpdated))
@@ -61,6 +67,12 @@ public class SensoHandsController : SensoBaseController
                         else break;
                     }
                 }
+            }
+            var dt = Time.realtimeSinceStartup - t;
+            if (dt > 0.5 || maxFrameUpdate == 0)
+            {
+                maxFrameUpdate = dt;
+                statsMesh.text = string.Format("{0}:{1:0.00},c:{2},s:{3:0.00},u:{4:0.00}", m_rightHandInd > -1 ? "r" : "l", dt, cnt, sendDt, updateDt);
             }
         }
 	}

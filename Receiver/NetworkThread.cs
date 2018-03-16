@@ -27,6 +27,8 @@ namespace Senso
 
         private string m_ping = "{\"type\":\"ping\"}";
 
+        public static int MAX_PACKET_CNT = 20;
+
         ///
         /// @brief Default constructor
         ///
@@ -49,7 +51,7 @@ namespace Senso
 
         abstract public void StartThread();
         abstract public void StopThread();
-        abstract public Stack<NetData> UpdateData();
+        abstract public int UpdateData(ref NetData[] res);
         abstract public void SetHeadLocationAndRotation(Vector3 position, Quaternion rotation);
         abstract public void VibrateFinger(EPositionType handType, EFingerType fingerType, ushort duration, byte strength);
         abstract public void SendPing();

@@ -15,9 +15,12 @@ public class SensoBaseController : MonoBehaviour
     public string SensoHost = "127.0.0.1"; //!< IP address of the Senso Server instane
     public int SensoPort = 53450; //!< Port of the Senso Server instance
     protected Senso.NetworkThread sensoThread;
+    protected Senso.NetData[] receivedData;
 
     public bool StartOnLaunch = true;
     public bool UseUDP = true;
+
+    protected float maxFrameUpdate = 0;
 
     [Header("Senso Tracking")]
     public bool useIRPattern = false;
@@ -28,6 +31,7 @@ public class SensoBaseController : MonoBehaviour
 
     // Use this for initialization
     public void Start () {
+        receivedData = new Senso.NetData[Senso.NetworkThread.MAX_PACKET_CNT];
         if (StartOnLaunch) StartTracking();
     }
 

@@ -4,7 +4,6 @@ using System.Threading;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
-using System.Collections.Generic;
 
 namespace Senso
 {
@@ -14,13 +13,16 @@ namespace Senso
 
         private UdpClient m_sock;
         private IPEndPoint ep;
-
-        private Stack<NetData> pendingPackets;
-        private System.Object packetsLock = new System.Object();
+        
+        private System.Object sendLock = new System.Object();
 
         private int SEND_BUFFER_SIZE = 4096; //!< Size of the buffer to send
         private Byte[] outBuffer;
         private int outBufferOffset = 0;
+
+        private NetData[] pendingPackets;
+        private int pendingPacketsWriteInd = 0;
+        private int pendingPacketsReadInd = 0;
 
         ///
         /// @brief Default constructor
@@ -28,13 +30,12 @@ namespace Senso
         public UDPThread(string host, Int32 port) : base(host, port)
         {
             outBuffer = new Byte[SEND_BUFFER_SIZE];
-            
+            pendingPackets = new NetData[2 * MAX_PACKET_CNT];
+
             if (State != NetworkState.SENSO_ERROR)
             {
                 ep = new IPEndPoint(m_ip, m_port);
             }
-
-            pendingPackets = new Stack<NetData>();
         }
 
         ~UDPThread()
@@ -71,6 +72,8 @@ namespace Senso
         { 
             Byte[] inBuffer;
             m_sock = new UdpClient();
+            var outBufferCopy = new Byte[SEND_BUFFER_SIZE];
+            int outLen;
 
             while (m_isStarted && State != NetworkState.SENSO_ERROR)
             {
@@ -96,18 +99,48 @@ namespace Senso
                                 var packet = processJsonStr(Encoding.ASCII.GetString(inBuffer, packetStart, i - packetStart));
                                 if (packet != null)
                                 {
-                                    lock (packetsLock)
-                                        pendingPackets.Push(packet);
+                                    pendingPackets[pendingPacketsWriteInd] = packet;
+                                    if (pendingPacketsWriteInd < pendingPackets.Length - 1)
+                                    {
+                                        Interlocked.Increment(ref pendingPacketsWriteInd);
+                                    }
+                                    else
+                                    {
+                                        Interlocked.Exchange(ref pendingPacketsWriteInd, 0);
+                                    }
+                                    if (pendingPacketsWriteInd == pendingPacketsReadInd) Interlocked.Increment(ref pendingPacketsReadInd);
                                 }
                                 packetStart = i + 1;
                             }
+                        }
+                    }
+                    if (outBufferOffset > 0)
+                    {
+                        lock (sendLock)
+                        {
+                            Buffer.BlockCopy(outBuffer, 0, outBufferCopy, 0, outBufferOffset);
+                            outLen = outBufferOffset;
+                            outBufferOffset = 0;
+                        }
+                        for (int i = 0; i < outLen; ++i)
+                        {
+                            if (outBufferCopy[i] == '\n')
+                            {
+                                m_sock.Send(outBufferCopy, i, ep);
+                                Buffer.BlockCopy(outBufferCopy, i + 1, outBufferCopy, 0, outLen - i);
+                                outLen -= i;
+                            }
+                        }
+                        if (outLen > 0)
+                        {
+                            m_sock.Send(outBufferCopy, outLen, ep);
                         }
                     }
                 }
                 catch (SocketException ex)
                 {
                     Debug.LogError("(Socket) Unable to get packet from Senso with code " + ex.ErrorCode + ": " + ex.Message);
-                    State = NetworkState.SENSO_ERROR;
+                    //State = NetworkState.SENSO_ERROR;
                 }
                 catch (Exception ex)
                 {
@@ -120,15 +153,28 @@ namespace Senso
             State = NetworkState.SENSO_DISCONNECTED;
         }
 
-        public override Stack<NetData> UpdateData()
+        public override int UpdateData(ref NetData[] res)
         {
-            Stack<NetData> result = null;
-            lock (packetsLock)
+            int ri = pendingPacketsReadInd, wi = pendingPacketsWriteInd;
+            Interlocked.Exchange(ref pendingPacketsReadInd, wi);
+            int unreadPackets = 0;
+            if (wi < ri)
             {
-                result = new Stack<NetData>(pendingPackets);
-                pendingPackets.Clear();
+                unreadPackets = (pendingPackets.Length - ri) + wi;
+            } else
+            {
+                unreadPackets = wi - ri;
             }
-            return result;
+            if (res.Length < unreadPackets) unreadPackets = res.Length;
+            
+            for (int cnt = 0, i = wi - 1; cnt < unreadPackets; ++cnt)
+            {
+                if (i < 0) i = pendingPackets.Length - 1;
+                //Debug.Log(i);
+                res[cnt] = pendingPackets[i];
+                --i;
+            }
+            return unreadPackets;
         }
 
 
@@ -167,9 +213,8 @@ namespace Senso
 
         private void sendToServer(String str)
         {
-            outBufferOffset += Encoding.ASCII.GetBytes(str, 0, str.Length, outBuffer, outBufferOffset);
-            m_sock.Send(outBuffer, outBufferOffset, ep);
-            outBufferOffset = 0;
+            lock(sendLock)
+                outBufferOffset += Encoding.ASCII.GetBytes(str, 0, str.Length, outBuffer, outBufferOffset);
         }
     }
 }
