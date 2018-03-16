@@ -3,6 +3,7 @@
 public class SensoBodyController : SensoBaseController {
 
     // Variables for hands objects
+    [Header("Body tracking")]
     public Senso.Body Avatar;
 
     // Initialization
@@ -31,9 +32,10 @@ public class SensoBodyController : SensoBaseController {
                 while (datas.Count > 0)
                 {
                     var parsedData = datas.Pop();
-                    if (parsedData.type.Equals("avatar"))
+                    if (parsedData.type.Equals("avatar") || parsedData.type.Equals("campos"))
                     {
-                        if (!positionSet) {
+                        if (!positionSet)
+                        {
                             var bodyData = JsonUtility.FromJson<Senso.BodyDataFull>(parsedData.packet);
                             if (bodyData != null)
                             {
@@ -41,6 +43,7 @@ public class SensoBodyController : SensoBaseController {
                                 positionSet = true;
                             }
                         }
+                        else break;
                     }
                 }
             }

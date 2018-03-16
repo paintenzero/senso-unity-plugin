@@ -6,7 +6,9 @@ public class SensoBaseController : MonoBehaviour
 {
     public Transform HeadPositionSource;
     private System.DateTime orientationNextSend;
+    private System.DateTime pingNextSend;
     public double orientationSendEveryMS = 100.0f;
+    public double pingSendEveryMS = 100.0f;
     public Vector3 subtractFromOrientation;
 
     // Where to connect to
@@ -16,6 +18,13 @@ public class SensoBaseController : MonoBehaviour
 
     public bool StartOnLaunch = true;
     public bool UseUDP = true;
+
+    [Header("Senso Tracking")]
+    public bool useIRPattern = false;
+    [Tooltip("Head top IR pattern")]
+    public int HeadTopPattern = 0;
+    [Tooltip("Face IR pattern")]
+    public int FacePattern = 0;
 
     // Use this for initialization
     public void Start () {
@@ -28,17 +37,15 @@ public class SensoBaseController : MonoBehaviour
         if (sensoThread != null)
         {
             var now = System.DateTime.Now;
-            if (now >= orientationNextSend)
+            if (HeadPositionSource != null && now >= orientationNextSend)
             {
-                if (HeadPositionSource != null)
-                {
-                    sensoThread.SetHeadLocationAndRotation(HeadPositionSource.transform.localPosition, HeadPositionSource.transform.rotation * Quaternion.Inverse(Quaternion.Euler(subtractFromOrientation)));
-                }
-                else
-                {
-                    sensoThread.SendPing();
-                }
+                sensoThread.SetHeadLocationAndRotation(HeadPositionSource.transform.localPosition, HeadPositionSource.transform.rotation * Quaternion.Inverse(Quaternion.Euler(subtractFromOrientation)));
                 orientationNextSend = now.AddMilliseconds(orientationSendEveryMS);
+            }
+            if (now >= pingNextSend)
+            {
+                sensoThread.SendPing();
+                pingNextSend = now.AddMilliseconds(orientationSendEveryMS);
             }
         }
     }
@@ -59,6 +66,10 @@ public class SensoBaseController : MonoBehaviour
             else
             {
                 sensoThread = new Senso.TCPThread(SensoHost, SensoPort);
+            }
+            if (useIRPattern)
+            {
+                sensoThread.SetHeadPattern(HeadTopPattern, FacePattern);
             }
             sensoThread.StartThread();
         }

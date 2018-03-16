@@ -25,6 +25,8 @@ namespace Senso
         protected IPAddress m_ip;
         protected Int32 m_port;
 
+        private string m_ping = "{\"type\":\"ping\"}";
+
         ///
         /// @brief Default constructor
         ///
@@ -90,9 +92,14 @@ namespace Senso
             return String.Format("{{\"type\":\"orientation\",\"data\":{{\"type\":\"hmd\",\"px\":{0},\"py\":{1},\"pz\":{2}, \"qx\":{3},\"qy\":{4},\"qz\":{5},\"qw\":{6}}}}}\n", position.x, position.z, position.y, rotation.x, rotation.z, rotation.y, rotation.w);
         }
 
-        public String GetPingJSON()
+        public void SetHeadPattern(int topPattern, int facePattern)
         {
-            return "{\"type\":\"ping\"}";
+            m_ping = String.Format("{{\"type\":\"pattern\",\"val\":\"{0:D4}:{1:D4}\"}}", topPattern, facePattern);
+        }
+
+        protected String GetPingJSON()
+        {
+                return m_ping;
         }
     }
 }
