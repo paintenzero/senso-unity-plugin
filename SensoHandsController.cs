@@ -58,12 +58,46 @@ public class SensoHandsController : SensoBaseController
                                 leftUpdated = true;
                             }
                         }
-                        else break;
+                    } else if (parsedData.type.Equals("gesture"))
+                    {
+                        var gesture = JsonUtility.FromJson<Senso.GestureDataFull>(parsedData.packet);
+                        var hand = GetHandByType(gesture.data.type);
+                        if (hand != null)
+                        {
+                            if (gesture.data.name.Equals("clap"))
+                            {
+                                hand.TriggerClap();
+                            }
+                            else if (gesture.data.name.StartsWith("gesture_2")) // Grab event
+                            {
+                                bool isEnd = gesture.data.name.EndsWith("end");
+                                hand.TriggerGrab(isEnd);
+                            } else if (gesture.data.name.StartsWith("pinch"))
+                            {
+                                bool isEnd = gesture.data.name.EndsWith("end");
+                                hand.TriggerPinch((Senso.ESensoFinger)gesture.data.fingers[0], (Senso.ESensoFinger)gesture.data.fingers[1], isEnd);
+                            }
+                        }
                     }
                 }
             }
         }
 	}
+
+    public Senso.Hand GetHandByType(string type)
+    {
+        if (type.Equals("rh"))
+        {
+            if (m_rightHandInd >= 0)
+                return Hands[m_rightHandInd];
+        }
+        else
+        {
+            if (m_leftHandInd >= 0)
+                return Hands[m_leftHandInd];
+        }
+        return null;
+    }
 
     public void SendVibro(Senso.EPositionType handType, Senso.EFingerType finger, ushort duration, byte strength)
     {

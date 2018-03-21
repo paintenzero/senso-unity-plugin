@@ -1,7 +1,41 @@
+using System;
 using UnityEngine;
 
 namespace Senso
 {
+    public enum ESensoFinger
+    {
+        Thumb, Index, Middle, Third, Little
+    }
+    
+    ///
+    /// @brief Arguments for fingers pinch event
+    ///
+    public class SensoPinchEventArgs : EventArgs
+    {
+        public bool IsEnd { get; private set; }
+        public ESensoFinger[] Fingers { get; private set; }
+
+        public SensoPinchEventArgs(ESensoFinger finger1, ESensoFinger finger2, bool end)
+        {
+            IsEnd = end;
+            Fingers = new ESensoFinger[2] { finger1, finger2 };
+        }
+    }
+
+    ///
+    /// @brief Arguments for fingers pinch event
+    ///
+    public class GrabEventArgs : EventArgs
+    {
+        public bool IsEnd { get; private set; }
+
+        public GrabEventArgs(bool end)
+        {
+            IsEnd = end;
+        }
+    }
+
     public abstract class Hand : MonoBehaviour
     {
         public EPositionType HandType;
@@ -9,7 +43,13 @@ namespace Senso
         public int BatteryLevel { get; private set; }
         public int Temperature { get; private set; }
         public string MacAddress { get; private set; }
-		public HandData Pose { get; private set; }
+        public HandData Pose { get; private set; }
+        public bool Grabbing { get; private set; }
+
+        // Events
+        public event EventHandler<SensoPinchEventArgs> OnPinch; // Is fired when two fingers started pinching
+        public event EventHandler<GrabEventArgs> OnGrab; // Is fired when hand grab state changed
+        public event EventHandler<EventArgs> OnClap;
 
         public void Start()
         {
@@ -49,5 +89,32 @@ namespace Senso
 		{
 			Pose = newData;
 		}
+
+        public void TriggerPinch(ESensoFinger finger1Type, ESensoFinger finger2Type, bool stop = false)
+        {
+            var args = new SensoPinchEventArgs(finger1Type < finger2Type ? finger1Type : finger2Type, finger2Type > finger1Type ? finger2Type : finger1Type, stop);
+            if (OnPinch != null)
+            {
+                OnPinch(this, args);
+            }
+        }
+
+        public void TriggerGrab(bool end)
+        {
+            var args = new GrabEventArgs(end);
+            Grabbing = !end;
+            if (OnGrab != null)
+            {
+                OnGrab(this, args);
+            }
+        }
+
+        public void TriggerClap()
+        {
+            if (OnClap != null)
+            {
+                OnClap(this, EventArgs.Empty);
+            }
+        }
     }
 }
