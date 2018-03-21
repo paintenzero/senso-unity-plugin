@@ -6,8 +6,6 @@ public class SensoBodyController : SensoBaseController {
     [Header("Body tracking")]
     public Senso.Body Avatar;
 
-    public TextMesh statsMesh;
-
     // Initialization
     void Start ()
     {
@@ -24,14 +22,10 @@ public class SensoBodyController : SensoBaseController {
     // Every frame
     void Update ()
     {
-        var t = Time.realtimeSinceStartup;
         base.Update();
-        var sendDt = Time.realtimeSinceStartup - t;
         if (sensoThread != null)
         {
-            var t2 = Time.realtimeSinceStartup;
             int cnt = sensoThread.UpdateData(ref receivedData);
-            var updateDt = Time.realtimeSinceStartup - t2;
             if (cnt > 0)
             {
                 bool positionSet = false;
@@ -52,12 +46,6 @@ public class SensoBodyController : SensoBaseController {
                         else break;
                     }
                 }
-            }
-            var dt = Time.realtimeSinceStartup - t;
-            if (dt > 0.5 || maxFrameUpdate == 0)
-            {
-                maxFrameUpdate = dt;
-                statsMesh.text = string.Format("b:{0:0.00},c:{1},s:{2:0.00},u:{3:0.00}", dt, cnt, sendDt, updateDt);
             }
         }
 	}

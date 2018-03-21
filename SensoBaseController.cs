@@ -20,8 +20,6 @@ public class SensoBaseController : MonoBehaviour
     public bool StartOnLaunch = true;
     public bool UseUDP = true;
 
-    protected float maxFrameUpdate = 0;
-
     [Header("Senso Tracking")]
     public bool useIRPattern = false;
     [Tooltip("Head top IR pattern")]
